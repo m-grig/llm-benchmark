@@ -6,6 +6,7 @@ export async function runSummarizationTests(model: LLM) {
   console.log('📝 Running summarization tests...');
   try {
     const ebayScore = await testEbayDescriptionSummary(model);
+    console.log(`  Total tokens used: ${ebayScore.totalTokens}`);
   } catch (e) {
     console.log('- Product Description Summarization:');
     console.log(`  ${colorizePercentage(0)} - Failed to run test`);
@@ -15,7 +16,8 @@ export async function runSummarizationTests(model: LLM) {
   console.log('');
 }
 
-async function testEbayDescriptionSummary(model: LLM): Promise<number> {
+async function testEbayDescriptionSummary(model: LLM): Promise<{ percentage: number; totalTokens: number }> {
+  let totalTokens = 0;
   const prompt = `Can you summarize this product description?
 
 
@@ -54,11 +56,13 @@ We read and reply to all questions and concerns and do our best to do so within 
   const conversation: ChatLike = [{ role: 'user', content: prompt }];
 
   const firstResponse = await model.respond(prompt);
+  totalTokens += firstResponse.stats.totalTokensCount ?? 0;
 
   conversation.push({ role: 'assistant', content: firstResponse.content });
   conversation.push({ role: 'user', content: 'List the episodes included in this collection as a json array' });
 
   const secondResponse = await model.respond(conversation);
+  totalTokens += secondResponse.stats.totalTokensCount ?? 0;
   const parsedResponse = parseJSON(secondResponse.nonReasoningContent);
 
   const expectedResult = [
@@ -84,10 +88,10 @@ We read and reply to all questions and concerns and do our best to do so within 
     const scoreText = `  ${colorizePercentage(100)} - `;
     if (parsedResponseString === JSON.stringify(expectedResult)) {
       console.log(`${scoreText}Perfectly extracted product details as JSON!`);
-      return score;
+      return { percentage: score, totalTokens };
     } else {
       console.log(`${scoreText}Successfully extracted product details as JSON, preserving order but not case.`);
-      return score;
+      return { percentage: score, totalTokens };
     }
   }
 
@@ -106,5 +110,5 @@ We read and reply to all questions and concerns and do our best to do so within 
       ? `${totalScore}/${expectedResult.length} perfect matches`
       : `${totalScore}/${expectedResult.length} matches with ${perfectResults.length} case perfect matches`;
   console.log(`  ${colorizePercentage(percentage)} - ${ratio}`);
-  return percentage;
+  return { percentage, totalTokens };
 }
