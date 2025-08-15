@@ -3,7 +3,7 @@ import { scoreArray } from '../util/array';
 
 export async function runMathTests(model: LLM) {
   console.log('🧠 Running math tests...');
-  await testBasicAlgebra(model);
+  const algebraScore = await testBasicAlgebra(model);
 }
 
 async function testBasicAlgebra(model: LLM) {
@@ -15,6 +15,7 @@ async function testBasicAlgebra(model: LLM) {
     ['2x - 7 = 11', 9],
     ['5x + 4 = 29', 5],
     ['2x + 3x = 25', 5],
+    ['1.2x - 0.6 = 5.4', 5],
   ];
   const results = equations.map(async (equation, i) => {
     const prompt = instructions + equation[0];
@@ -31,4 +32,5 @@ async function testBasicAlgebra(model: LLM) {
   console.log(
     `Total tokens used: ${finalScore.totalTokens}; Average tokens per test: ${finalScore.averageTokensPerTest}`
   );
+  return finalScore;
 }
