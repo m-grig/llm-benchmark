@@ -7,7 +7,7 @@ export async function runSummarizationTests(model: LLM) {
   try {
     const ebayScore = await testEbayDescriptionSummary(model);
   } catch (e) {
-    console.log('Product Description Summarization score:');
+    console.log('- Product Description Summarization:');
     console.log(`  ${colorizePercentage(0)} - Failed to run test`);
     console.error(e);
     return 0;
@@ -77,7 +77,7 @@ We read and reply to all questions and concerns and do our best to do so within 
 
   // validate result
   const parsedResponseString = JSON.stringify(parsedResponse);
-  console.log('Product Description Summarization score:');
+  console.log('- Product Description Summarization:');
 
   if (parsedResponseString.toLowerCase() === JSON.stringify(lowerExpectedResult)) {
     const score = 100;

@@ -34,7 +34,7 @@ async function testBasicAlgebra(model: LLM) {
   });
   const awaitedResults = await Promise.all(results);
   const finalScore = scoreArray(awaitedResults);
-  console.log('Algebra score:');
+  console.log('- Basic Algebra:');
   console.log(`  ${colorizePercentage(finalScore.percentage)} - ${finalScore.score}/${finalScore.total}`);
   console.log(
     `  Total tokens used: ${finalScore.totalTokens}; Average tokens per test: ${finalScore.averageTokensPerTest}`
