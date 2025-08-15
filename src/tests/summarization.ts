@@ -1,12 +1,20 @@
 import type { ChatLike, LLM } from '@lmstudio/sdk';
 import { parseJSON } from '../util/parse';
+import { colorizePercentage } from '../util/logging';
 
 export async function runSummarizationTests(model: LLM) {
   console.log('📝 Running summarization tests...');
-  const ebayScore = await testEbayDescriptionSummary(model);
+  try {
+    const ebayScore = await testEbayDescriptionSummary(model);
+  } catch (e) {
+    console.log(`❌ ${colorizePercentage(0)} - Failed to run test`);
+    console.error(e);
+    return 0;
+  }
+  console.log('');
 }
 
-async function testEbayDescriptionSummary(model: LLM) {
+async function testEbayDescriptionSummary(model: LLM): Promise<number> {
   console.log('Testing ability to summarize product description detail as JSON');
   const prompt = `Can you summarize this product description?
 
@@ -69,19 +77,26 @@ We read and reply to all questions and concerns and do our best to do so within 
 
   // validate result
   const parsedResponseString = JSON.stringify(parsedResponse);
-  if (parsedResponseString === JSON.stringify(expectedResult)) {
-    console.log('✅ 100% - Perfectly extracted product details as JSON');
-    return 100.0;
-  } else if (parsedResponseString.toLowerCase() === JSON.stringify(lowerExpectedResult)) {
-    console.log('✅ 100% - Successfully extracted product details as JSON, preserving order but not case');
-    return 100.0;
+
+  if (parsedResponseString.toLowerCase() === JSON.stringify(lowerExpectedResult)) {
+    const score = 100;
+    const scoreText = `✅ ${colorizePercentage(100)} - `;
+    if (parsedResponseString === JSON.stringify(expectedResult)) {
+      console.log(`${scoreText}Perfectly extracted product details as JSON`);
+      return score;
+    } else {
+      console.log(`${scoreText}Successfully extracted product details as JSON, preserving order but not case`);
+      return score;
+    }
   }
 
   const perfectResults = [];
   const imperfectResults = [];
   for (const entry of parsedResponse) {
-    if (expectedResult.includes(entry)) perfectResults.push(entry);
-    else if (lowerExpectedResult.includes(entry.toLowerCase())) imperfectResults.push(entry);
+    const isObject = typeof entry === 'object' && entry !== null && !Array.isArray(entry) && 'title' in entry;
+    const title = !!isObject ? entry.title?.toString() : entry?.toString();
+    if (expectedResult.includes(title)) perfectResults.push(title);
+    else if (lowerExpectedResult.includes(title.toLowerCase())) imperfectResults.push(title);
   }
   const totalScore = perfectResults.length + imperfectResults.length;
   const percentage = (totalScore / expectedResult.length) * 100;
@@ -89,6 +104,6 @@ We read and reply to all questions and concerns and do our best to do so within 
     totalScore === perfectResults.length
       ? `${totalScore}/${expectedResult.length} matches`
       : `${totalScore}/${expectedResult.length} matches with ${perfectResults.length} case perfect matches`;
-  console.log(`⚠️ ${percentage.toFixed(2)}% - ${ratio}`);
+  console.log(`⚠️  ${colorizePercentage(percentage)} - ${ratio}`);
   return percentage;
 }
