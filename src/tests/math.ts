@@ -1,6 +1,6 @@
 import type { LLM } from '@lmstudio/sdk';
 import { scoreArray } from '../util/array';
-import { colorizePercentage, colorizeText } from '../util/logging';
+import { colorizePercentage, colorizeText, makeTextBold } from '../util/logging';
 
 export async function runMathTests(model: LLM) {
   console.log('🧠 Running math tests...');
@@ -29,15 +29,15 @@ async function testBasicAlgebra(model: LLM) {
     const colorizedEquation = colorizeText(equation[0]?.toString() ?? '', 'gray');
     const colorizedResult =
       score == 1 ? colorizeText(result.toString(), 'green') : colorizeText(result.toString(), 'red');
-    // console.log(`${correctCount}/${equations.length} ${colorizedEquation} - ${colorizedResult}`);
+    console.log(`  ${correctCount}/${equations.length} ${colorizedEquation} - ${colorizedResult}`);
     return { score, tokens: response.stats.totalTokensCount };
   });
   const awaitedResults = await Promise.all(results);
   const finalScore = scoreArray(awaitedResults);
-  console.log('- Basic Algebra:');
+  console.log(makeTextBold('- Basic Algebra:'));
   console.log(`  ${colorizePercentage(finalScore.percentage)} - ${finalScore.score}/${finalScore.total}`);
   console.log(
-    `  Total tokens used: ${finalScore.totalTokens}; Average tokens per test: ${finalScore.averageTokensPerTest}`
+    `  Total tokens used: ${finalScore.totalTokens.toLocaleString()}; Average tokens per test: ${finalScore.averageTokensPerTest.toLocaleString()}`
   );
   return finalScore;
 }

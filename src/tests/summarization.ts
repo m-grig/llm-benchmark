@@ -1,14 +1,14 @@
 import type { ChatLike, LLM } from '@lmstudio/sdk';
 import { parseJSON } from '../util/parse';
-import { colorizePercentage } from '../util/logging';
+import { colorizePercentage, makeTextBold } from '../util/logging';
 
 export async function runSummarizationTests(model: LLM) {
   console.log('📝 Running summarization tests...');
   try {
     const ebayScore = await testEbayDescriptionSummary(model);
-    console.log(`  Total tokens used: ${ebayScore.totalTokens}`);
+    console.log(`  Total tokens used: ${ebayScore.totalTokens.toLocaleString()}`);
   } catch (e) {
-    console.log('- Product Description Summarization:');
+    console.log(makeTextBold('- Product Description Summarization:'));
     console.log(`  ${colorizePercentage(0)} - Failed to run test`);
     console.error(e);
     return 0;
@@ -81,7 +81,7 @@ We read and reply to all questions and concerns and do our best to do so within 
 
   // validate result
   const parsedResponseString = JSON.stringify(parsedResponse);
-  console.log('- Product Description Summarization:');
+  console.log(makeTextBold('- Product Description Summarization:'));
 
   if (parsedResponseString.toLowerCase() === JSON.stringify(lowerExpectedResult)) {
     const score = 100;

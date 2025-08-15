@@ -4,7 +4,7 @@ import { runMathTests } from './tests/math';
 import { runSummarizationTests } from './tests/summarization';
 
 const client = new LMStudioClient();
-const model = await client.llm.model(Models.LFM2_1_2B);
+const model = await client.llm.model(Models.GEMMA_270M);
 
 await runMathTests(model);
 await runSummarizationTests(model);

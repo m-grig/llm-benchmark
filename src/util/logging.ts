@@ -16,3 +16,8 @@ export function colorizePercentage(percent: number) {
   else if (percent >= 60) return colorizeText(percentageText, 'yellow');
   else return colorizeText(percentageText, 'red');
 }
+
+export function makeTextBold(text: string) {
+  // \x1b[1m starts bold, \x1b[0m resets style
+  return `\x1b[1m${text}\x1b[0m`;
+}
