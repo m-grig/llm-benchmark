@@ -29,15 +29,15 @@ async function testBasicAlgebra(model: LLM) {
     const colorizedEquation = colorizeText(equation[0]?.toString() ?? '', 'gray');
     const colorizedResult =
       score == 1 ? colorizeText(result.toString(), 'green') : colorizeText(result.toString(), 'red');
-    console.log(`${correctCount}/${equations.length} ${colorizedEquation} - ${colorizedResult}`);
+    // console.log(`${correctCount}/${equations.length} ${colorizedEquation} - ${colorizedResult}`);
     return { score, tokens: response.stats.totalTokensCount };
   });
   const awaitedResults = await Promise.all(results);
   const finalScore = scoreArray(awaitedResults);
   console.log('Algebra score:');
-  console.log(`${colorizePercentage(finalScore.percentage)} - ${finalScore.score} out of ${finalScore.total}`);
+  console.log(`  ${colorizePercentage(finalScore.percentage)} - ${finalScore.score}/${finalScore.total}`);
   console.log(
-    `Total tokens used: ${finalScore.totalTokens}; Average tokens per test: ${finalScore.averageTokensPerTest}`
+    `  Total tokens used: ${finalScore.totalTokens}; Average tokens per test: ${finalScore.averageTokensPerTest}`
   );
   return finalScore;
 }

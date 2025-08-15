@@ -7,7 +7,8 @@ export async function runSummarizationTests(model: LLM) {
   try {
     const ebayScore = await testEbayDescriptionSummary(model);
   } catch (e) {
-    console.log(`❌ ${colorizePercentage(0)} - Failed to run test`);
+    console.log('Product Description Summarization score:');
+    console.log(`  ${colorizePercentage(0)} - Failed to run test`);
     console.error(e);
     return 0;
   }
@@ -15,7 +16,6 @@ export async function runSummarizationTests(model: LLM) {
 }
 
 async function testEbayDescriptionSummary(model: LLM): Promise<number> {
-  console.log('Testing ability to summarize product description detail as JSON');
   const prompt = `Can you summarize this product description?
 
 
@@ -77,15 +77,16 @@ We read and reply to all questions and concerns and do our best to do so within 
 
   // validate result
   const parsedResponseString = JSON.stringify(parsedResponse);
+  console.log('Product Description Summarization score:');
 
   if (parsedResponseString.toLowerCase() === JSON.stringify(lowerExpectedResult)) {
     const score = 100;
-    const scoreText = `✅ ${colorizePercentage(100)} - `;
+    const scoreText = `  ${colorizePercentage(100)} - `;
     if (parsedResponseString === JSON.stringify(expectedResult)) {
-      console.log(`${scoreText}Perfectly extracted product details as JSON`);
+      console.log(`${scoreText}Perfectly extracted product details as JSON!`);
       return score;
     } else {
-      console.log(`${scoreText}Successfully extracted product details as JSON, preserving order but not case`);
+      console.log(`${scoreText}Successfully extracted product details as JSON, preserving order but not case.`);
       return score;
     }
   }
@@ -102,8 +103,8 @@ We read and reply to all questions and concerns and do our best to do so within 
   const percentage = (totalScore / expectedResult.length) * 100;
   const ratio =
     totalScore === perfectResults.length
-      ? `${totalScore}/${expectedResult.length} matches`
+      ? `${totalScore}/${expectedResult.length} perfect matches`
       : `${totalScore}/${expectedResult.length} matches with ${perfectResults.length} case perfect matches`;
-  console.log(`⚠️  ${colorizePercentage(percentage)} - ${ratio}`);
+  console.log(`  ${colorizePercentage(percentage)} - ${ratio}`);
   return percentage;
 }
