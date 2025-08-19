@@ -1,15 +1,17 @@
 import type { LLM } from '@lmstudio/sdk';
 import { scoreArray } from '../util/array';
 import { colorizePercentage, colorizeText, makeTextBold } from '../util/logging';
+import type { TestItem } from './types';
+import { runTests } from '../util/runTest';
 
 export async function runMathTests(model: LLM) {
   console.log('🧠 Running math tests...');
-  const algebraScore = await testBasicAlgebra(model);
-  console.log('');
+  const basicAlgebraTests = await getBasicAlgebraTests();
+  await runTests(basicAlgebraTests, model, 'Basic Algebra');
 }
 
-async function testBasicAlgebra(model: LLM) {
-  const instructions = 'Solve this algebra equation for x. Only respond with the correct number.\n';
+async function getBasicAlgebraTests() {
+  const basicAlgebraTests: TestItem[] = [];
   const equations = [
     ['3x = 21', 7],
     ['5.9 = x + 5.11', 0.79],
@@ -19,25 +21,18 @@ async function testBasicAlgebra(model: LLM) {
     ['2x + 3x = 25', 5],
     ['1.2x - 0.6 = 5.4', 5],
   ];
-  let correctCount = 0;
-  const results = equations.map(async (equation, i) => {
-    const prompt = instructions + equation[0];
-    const response = await model.respond(prompt);
-    const result = Number(response.nonReasoningContent);
-    const score = result === equation[1] ? 1 : 0;
-    correctCount += score;
-    const colorizedEquation = colorizeText(equation[0]?.toString() ?? '', 'gray');
-    const colorizedResult =
-      score == 1 ? colorizeText(result.toString(), 'green') : colorizeText(result.toString(), 'red');
-    console.log(`  ${correctCount}/${equations.length} ${colorizedEquation} - ${colorizedResult}`);
-    return { score, tokens: response.stats.totalTokensCount };
-  });
-  const awaitedResults = await Promise.all(results);
-  const finalScore = scoreArray(awaitedResults);
-  console.log(makeTextBold('- Basic Algebra:'));
-  console.log(`  ${colorizePercentage(finalScore.percentage)} - ${finalScore.score}/${finalScore.total}`);
-  console.log(
-    `  Total tokens used: ${finalScore.totalTokens.toLocaleString()}; Average tokens per test: ${finalScore.averageTokensPerTest.toLocaleString()}`
-  );
-  return finalScore;
+  const instructions = 'Solve this algebra equation for x. Only respond with the correct number.\n';
+  for (const [input, output] of equations) {
+    if (!input) throw Error('Missing input value');
+    basicAlgebraTests.push({
+      name: input?.toString(),
+      prompt: instructions + input,
+      validation: (result) => {
+        const parsedResponse = Number(result);
+        const score = parsedResponse === output ? 1 : 0;
+        return { percentage: score * 100, resultText: result };
+      },
+    });
+  }
+  return basicAlgebraTests;
 }

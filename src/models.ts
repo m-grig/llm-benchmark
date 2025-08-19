@@ -7,4 +7,5 @@ export enum Models {
   LLAMA4_DOLPHIN_8B = 'llama4-dolphin-8b',
   JAV_V1_4B = 'jan-v1-4b',
   LFM2_1_2B = 'liquid/lfm2-1.2b',
+  MISTRAL_NEMO_INSTRUCT = 'mistralai/mistral-nemo-instruct-2407', // 28.57%; 100.00%; 100.00%
 }

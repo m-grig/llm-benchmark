@@ -1,39 +1,43 @@
 import type { LLM } from '@lmstudio/sdk';
-import { colorizePercentage, makeTextBold } from '../util/logging';
 import { parseJSON } from '../util/parse';
-import type { TestResult } from './types';
+import type { TestItem } from './types';
+import { runTests } from '../util/runTest';
 
 export async function runWorldKnowledgeTests(model: LLM) {
   console.log('🌎 Running world knowledge tests...');
-  try {
-    const geographyScore = await testGeography(model);
-    console.log(`  Total tokens used: ${geographyScore.totalTokens.toLocaleString()}`);
-  } catch (e) {
-    console.log(makeTextBold('- Geography Knowledge:'));
-    console.log(`  ${colorizePercentage(0)} - Failed to run test`);
-    console.error(e);
-    return 0;
-  }
-  console.log('');
+  runTests(geographyTests, model, 'Geography');
 }
 
-async function testGeography(model: LLM): Promise<TestResult> {
-  const prompt = `Please respond in a JSON array of strings listing the capitol cities of the following countries:
+const geographyTests: TestItem[] = [
+  {
+    name: 'Country Capitals',
+    prompt: `Please respond in a JSON array of strings listing the capitol cities of the following countries:
 Kenya
 South Korea
 Argentina
 Panama
-Zambia`;
-  const expectedResult = ['Nairobi', 'Seoul', 'Buenos Aires', 'Panama City', 'Lusaka'];
-
-  const response = await model.respond(prompt);
-  const result = parseJSON(response.nonReasoningContent);
-  const percentage = Number(JSON.stringify(expectedResult) === JSON.stringify(result)) * 100;
-
-  console.log(makeTextBold('- Geography:'));
-  console.log(`  ${colorizePercentage(percentage)}`);
-  return {
-    percentage,
-    totalTokens: response.stats.totalTokensCount ?? 0,
-  };
-}
+Zambia`,
+    validation: (result) => {
+      const expectedResult = JSON.stringify(['Nairobi', 'Seoul', 'Buenos Aires', 'Panama City', 'Lusaka']);
+      const parsedResult = parseJSON(result);
+      const resultText = JSON.stringify(parsedResult);
+      const percentage = Number(expectedResult === JSON.stringify(parsedResult)) * 100;
+      return {
+        percentage,
+        resultText,
+      };
+    },
+  },
+  {
+    name: 'Bass Pro Shop',
+    prompt: `Where is the Bass Pro Shop pyramid located? Please respond in the following JSON format:
+{"state": string, "city": string}.`,
+    validation: (result) => {
+      const parsedResult = parseJSON(result);
+      const resultText = JSON.stringify(parsedResult);
+      if (parsedResult.city === 'Memphis' && ['TN', 'Tennessee'].includes(parsedResult.state))
+        return { percentage: 100, resultText };
+      return { percentage: 0, resultText };
+    },
+  },
+];
