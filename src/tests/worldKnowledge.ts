@@ -2,10 +2,12 @@ import type { LLM } from '@lmstudio/sdk';
 import { parseJSON } from '../util/parse';
 import type { TestItem } from './types';
 import { runTests } from '../util/runTest';
+import { allPkmn } from '../data/gen_1_pokemon';
 
 export async function runWorldKnowledgeTests(model: LLM) {
   console.log('🌎 Running world knowledge tests...');
-  runTests(geographyTests, model, 'Geography');
+  await runTests(geographyTests, model, 'Geography');
+  return await runTests(gameKnowledge, model, 'Gaming');
 }
 
 const geographyTests: TestItem[] = [
@@ -41,3 +43,38 @@ Zambia`,
     },
   },
 ];
+
+const gameKnowledge: TestItem[] = [
+  {
+    name: 'Gen I Pokemon',
+    prompt: `Give me a list of all 151 Gen 1 Pokémon.`,
+    validation: (result) => {
+      const parsedResult = result.split('\n');
+      let currentPokemon = allPkmn.shift();
+      let previousPokemon: (typeof allPkmn)[0] | undefined;
+      let score = 0;
+      if (!currentPokemon) throw Error('Error parsing PKMN list');
+      for (const pokemon of parsedResult) {
+        if (previousPokemon && pokemon.includes(previousPokemon.name) && pokemon.includes(previousPokemon.number)) {
+          return {
+            percentage: 0,
+            resultText: 'Duplicate Pokemon, failed test',
+          };
+        }
+        if (pokemon.includes(currentPokemon.name) && pokemon.includes(currentPokemon.number)) {
+          score++;
+          previousPokemon = currentPokemon;
+          currentPokemon = allPkmn.shift();
+          if (!currentPokemon) break; // break when finished
+        }
+      }
+      const percentage = (score / 151) * 100;
+      return {
+        percentage,
+        resultText: '',
+      };
+    },
+  },
+];
+
+const transactionEnrichment: TestItem[] = [];

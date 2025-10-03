@@ -6,6 +6,7 @@ import { averageOfArray } from './array';
 export async function runTests(tests: TestItem[], model: LLM, title: string) {
   console.log(makeTextBold(`- ${title}:`));
   let totalTokens = 0;
+  let successfulResults = 0;
   const results: TestResult[] = [];
   for (const test of tests) {
     try {
@@ -15,17 +16,22 @@ export async function runTests(tests: TestItem[], model: LLM, title: string) {
       console.log(
         `  ${test.name} - ${colorizePercentage(result.percentage)} - ${result.totalTokens.toLocaleString()} tokens`
       );
-      if (result.resultText) console.log(colorizeText(`    Output: ${result.resultText}`, 'gray'));
+      if (result.percentage === 100) {
+        successfulResults += 1;
+      } else {
+        console.log(colorizeText(`    Output: ${result.resultText}`, 'gray'));
+      }
     } catch (e) {
       console.log(`  ${test.name} - ${colorizePercentage(0)} - Failed to run test`);
       console.error(e);
-      results.push({ percentage: 0, totalTokens: 0 });
+      results.push({ percentage: 0, totalTokens: 0, resultText: '' });
     }
   }
   console.log(makeTextBold(`  ${title} Totals:`));
   console.log('    Percentage - ' + colorizePercentage(averageOfArray(results.map((result) => result.percentage))));
   console.log(`    Tokens used - ${totalTokens.toLocaleString()}`);
   console.log('');
+  return { successful: successfulResults, total: tests.length };
 }
 
 export async function runTest(model: LLM, test: TestItem): Promise<TestResult> {
@@ -33,4 +39,7 @@ export async function runTest(model: LLM, test: TestItem): Promise<TestResult> {
   const score = test.validation(response.nonReasoningContent);
   const result: TestResult = { ...score, totalTokens: response.stats.totalTokensCount ?? 0 };
   return result;
+  // console.log(`  Total tokens used: ${result.totalTokens.toLocaleString()}`);
 }
+
+function logResult() {}

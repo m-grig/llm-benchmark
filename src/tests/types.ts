@@ -1,5 +1,5 @@
 export type ValidationResult = {
-  resultText?: string;
+  resultText: string;
   percentage: number;
 };
 

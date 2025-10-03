@@ -1,6 +1,4 @@
 import type { LLM } from '@lmstudio/sdk';
-import { scoreArray } from '../util/array';
-import { colorizePercentage, colorizeText, makeTextBold } from '../util/logging';
 import type { TestItem } from './types';
 import { runTests } from '../util/runTest';
 

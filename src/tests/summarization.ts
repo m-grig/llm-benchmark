@@ -7,13 +7,15 @@ export async function runSummarizationTests(model: LLM) {
   try {
     const ebayScore = await testEbayDescriptionSummary(model);
     console.log(`  Total tokens used: ${ebayScore.totalTokens.toLocaleString()}`);
+    console.log('');
+    return { successful: Number(ebayScore.percentage === 100), total: 1 };
   } catch (e) {
     console.log(makeTextBold('- Product Description Summarization:'));
     console.log(`  ${colorizePercentage(0)} - Failed to run test`);
     console.error(e);
+    console.log('');
     return 0;
   }
-  console.log('');
 }
 
 async function testEbayDescriptionSummary(model: LLM): Promise<{ percentage: number; totalTokens: number }> {
